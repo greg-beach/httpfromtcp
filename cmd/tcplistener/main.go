@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"net"
@@ -24,18 +23,18 @@ func main() {
 		if err != nil {
 			log.Fatalf("error: %s\n", err.Error())
 		}
+		defer conn.Close()
 		fmt.Println("Accepted connection from", conn.RemoteAddr())
 
-		reader := bufio.NewReader(conn)
-
-		request, err := RequestFromReader(reader)
+		req, err := request.RequestFromReader(conn)
 		if err != nil {
-			log.Fatalf("error: %s\n", err.Error())
+			log.Fatalf("error parsing request: %s\n", err.Error())
 		}
 
-		for line := range linesChan {
-			fmt.Println(line)
-		}
+		fmt.Println("Request line:")
+		fmt.Printf("- Method: %s\n", req.RequestLine.Method)
+		fmt.Printf("- Target: %s\n", req.RequestLine.RequestTarget)
+		fmt.Printf("- Version: %s\n", req.RequestLine.HttpVersion)
 
 		fmt.Println("Connection to", conn.RemoteAddr(), "closed")
 	}
