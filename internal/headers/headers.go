@@ -54,6 +54,12 @@ func (h Headers) Set(key, value string) {
 	h[key] = value
 }
 
+func (h Headers) Get(key string) (string, bool) {
+	key = strings.ToLower(key)
+	v, ok := h[key]
+	return v, ok
+}
+
 var tokenChars = []byte{'!', '#', '$', '%', '&', '\'', '*', '+', '-', '.', '^', '_', '`', '|', '~'}
 
 func validTokens(data []byte) bool {
@@ -74,4 +80,3 @@ func isTokenChar(c byte) bool {
 
 	return slices.Contains(tokenChars, c)
 }
-
