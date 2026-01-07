@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/greg-beach/internal/server"
+	"github.com/greg-beach/httpfromtcp/internal/server"
 )
 
 const port = 42069

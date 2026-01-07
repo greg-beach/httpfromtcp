@@ -2,11 +2,14 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net"
+	"sync/atomic"
 )
 
 type Server struct {
-	closed bool
+	listener net.Listener
+	closed   atomic.Bool
 }
 
 func Serve(port int) (*Server, error) {
@@ -14,39 +17,44 @@ func Serve(port int) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer listener.Close()
 
 	server := &Server{
-		closed: false,
+		listener: listener,
 	}
-	go server.Listen(listener)
+	go server.Listen()
 
 	return server, nil
 }
 
-func (s *Server) Close() {
-	s.closed = true
+func (s *Server) Close() error {
+	s.closed.Store(true)
+	if s.listener != nil {
+		return s.listener.Close()
+	}
+	return nil
 }
 
-func (s *Server) Listen(listener net.Listener) {
+func (s *Server) Listen() {
 	for {
-		conn, err := listener.Accept()
-
-		if s.closed {
-			return
-		}
-
+		conn, err := s.listener.Accept()
 		if err != nil {
-			return
+			if s.closed.Load() {
+				return
+			}
+			log.Printf("Error accepting connection: %v\n", err)
+			continue
 		}
-
-		s.handle(conn)
-
+		go s.handle(conn)
 	}
 }
 
 func (s *Server) handle(conn net.Conn) {
-	out := []byte("HTTP/1.1 200 OK \r\nContent-Type: text/plain\r\n\r\nHello World!")
-	conn.Write(out)
-	conn.Close()
+	defer conn.Close()
+	response := "HTTP/1.1 200 OK\r\n" +
+		"Content-Type: text/plain\r\n" +
+		"Content-Length: 13\r\n" +
+		"\r\n" +
+		"Hello World!\n"
+	conn.Write([]byte(response))
+	return
 }
