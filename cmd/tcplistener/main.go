@@ -13,7 +13,7 @@ const port = ":42069"
 func main() {
 	listener, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Fatalf("error listeniing for TCP traffic: %s\n", err.Error())
+		log.Fatalf("error listening for TCP traffic: %s\n", err.Error())
 	}
 	defer listener.Close()
 
